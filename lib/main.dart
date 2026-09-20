@@ -1,66 +1,73 @@
 import 'package:flutter/material.dart';
 import 'api_service.dart';
 
-void main() {
-  runApp(const FractionalInvestmentApp());
-}
+void main() => runApp(const FractionalInvestmentApp());
 
 class FractionalInvestmentApp extends StatelessWidget {
   const FractionalInvestmentApp({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final scheme = ColorScheme.fromSeed(
+      seedColor: const Color(0xff3454d1),
+      brightness: Brightness.light,
+    );
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Fractional Investment',
       theme: ThemeData(
         useMaterial3: true,
-        colorSchemeSeed: Colors.indigo,
-        scaffoldBackgroundColor: const Color(0xfff7f8fc),
+        colorScheme: scheme,
+        scaffoldBackgroundColor: const Color(0xfff5f7fb),
+        appBarTheme: const AppBarTheme(
+          centerTitle: false,
+          elevation: 0,
+          backgroundColor: Color(0xfff5f7fb),
+        ),
+        inputDecorationTheme: InputDecorationTheme(
+          filled: true,
+          fillColor: Colors.white,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.all(Radius.circular(16)),
+            borderSide: BorderSide.none,
+          ),
+        ),
+        cardTheme: const CardThemeData(
+          elevation: 0,
+          color: Colors.white,
+          margin: EdgeInsets.zero,
+        ),
       ),
       home: const LoginPage(),
     );
   }
 }
 
-// ================= LOGIN =================
-
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
-
   @override
   State<LoginPage> createState() => _LoginPageState();
 }
 
 class _LoginPageState extends State<LoginPage> {
-  final username = TextEditingController();
-  final password = TextEditingController();
-  bool loading = false;
-  bool hidden = true;
+  final user = TextEditingController();
+  final pass = TextEditingController();
+  bool hidden = true, loading = false;
 
   Future<void> login() async {
-    if (username.text.trim().isEmpty || password.text.isEmpty) {
+    if (user.text.trim().isEmpty || pass.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Enter username and password')),
       );
       return;
     }
-
     setState(() => loading = true);
-
     try {
-      final token = await ApiService.login(
-        username.text.trim(),
-        password.text,
-      );
-
+      final token = await ApiService.login(user.text.trim(), pass.text);
       if (!mounted) return;
-
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-          builder: (_) => HomePage(accessToken: token),
-        ),
+        MaterialPageRoute(builder: (_) => HomePage(token: token)),
       );
     } catch (e) {
       if (mounted) {
@@ -75,8 +82,8 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   void dispose() {
-    username.dispose();
-    password.dispose();
+    user.dispose();
+    pass.dispose();
     super.dispose();
   }
 
@@ -88,80 +95,63 @@ class _LoginPageState extends State<LoginPage> {
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(24),
             child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 450),
+              constraints: const BoxConstraints(maxWidth: 430),
               child: Column(
                 children: [
-                  const Icon(Icons.account_balance, size: 70),
-                  const SizedBox(height: 20),
-                  const Text(
-                    'Fractional Investment',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.primary,
+                      borderRadius: BorderRadius.circular(24),
                     ),
+                    child: const Icon(Icons.account_balance_wallet,
+                        color: Colors.white, size: 48),
                   ),
-                  const SizedBox(height: 10),
-                  const Text(
-                    'Invest in opportunities, one fraction at a time.',
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 40),
+                  const SizedBox(height: 20),
+                  const Text('Welcome Back',
+                      style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 8),
+                  const Text('Manage your fractional investments',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: Colors.grey)),
+                  const SizedBox(height: 35),
                   TextField(
-                    controller: username,
+                    controller: user,
                     decoration: const InputDecoration(
                       labelText: 'Username',
                       prefixIcon: Icon(Icons.person_outline),
-                      border: OutlineInputBorder(),
                     ),
                   ),
-                  const SizedBox(height: 18),
+                  const SizedBox(height: 16),
                   TextField(
-                    controller: password,
+                    controller: pass,
                     obscureText: hidden,
                     decoration: InputDecoration(
                       labelText: 'Password',
                       prefixIcon: const Icon(Icons.lock_outline),
-                      border: const OutlineInputBorder(),
                       suffixIcon: IconButton(
-                        icon: Icon(
-                          hidden
-                              ? Icons.visibility_off
-                              : Icons.visibility,
-                        ),
-                        onPressed: () {
-                          setState(() => hidden = !hidden);
-                        },
+                        onPressed: () => setState(() => hidden = !hidden),
+                        icon: Icon(hidden ? Icons.visibility_off : Icons.visibility),
                       ),
                     ),
                   ),
-                  const SizedBox(height: 25),
+                  const SizedBox(height: 24),
                   SizedBox(
                     width: double.infinity,
-                    height: 52,
+                    height: 54,
                     child: FilledButton(
                       onPressed: loading ? null : login,
                       child: loading
-                          ? const SizedBox(
-                              height: 22,
-                              width: 22,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                              ),
-                            )
+                          ? const CircularProgressIndicator()
                           : const Text('Login'),
                     ),
                   ),
                   const SizedBox(height: 12),
-                  OutlinedButton(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const RegisterPage(),
-                        ),
-                      );
-                    },
+                  TextButton(
+                    onPressed: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const RegisterPage()),
+                    ),
                     child: const Text('Create New Account'),
                   ),
                 ],
@@ -174,195 +164,99 @@ class _LoginPageState extends State<LoginPage> {
   }
 }
 
-// ================= REGISTER =================
-
 class RegisterPage extends StatelessWidget {
   const RegisterPage({super.key});
-
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Create Account')),
-      body: const Center(
-        child: Padding(
-          padding: EdgeInsets.all(24),
-          child: Text(
-            'Registration API will be connected in the next step.',
-            textAlign: TextAlign.center,
+  Widget build(BuildContext context) => Scaffold(
+        appBar: AppBar(title: const Text('Create Account')),
+        body: const Center(
+          child: Padding(
+            padding: EdgeInsets.all(24),
+            child: Text(
+              'Registration API will be connected in the next step.',
+              textAlign: TextAlign.center,
+            ),
           ),
         ),
-      ),
-    );
-  }
+      );
 }
 
-// ================= HOME =================
-
 class HomePage extends StatefulWidget {
-  final String accessToken;
-
-  const HomePage({
-    super.key,
-    required this.accessToken,
-  });
-
+  final String token;
+  const HomePage({super.key, required this.token});
   @override
   State<HomePage> createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> {
   int index = 0;
-
   @override
   Widget build(BuildContext context) {
     final pages = [
-      DashboardPage(token: widget.accessToken),
-      OpportunitiesPage(token: widget.accessToken),
-      MyInvestmentsPage(token: widget.accessToken),
+      DashboardPage(token: widget.token),
+      OpportunitiesPage(token: widget.token),
+      MyInvestmentsPage(token: widget.token),
       const ProfilePage(),
     ];
-
     return Scaffold(
       body: pages[index],
       bottomNavigationBar: NavigationBar(
         selectedIndex: index,
-        onDestinationSelected: (value) {
-          setState(() => index = value);
-        },
+        onDestinationSelected: (v) => setState(() => index = v),
         destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.home_outlined),
-            selectedIcon: Icon(Icons.home),
-            label: 'Home',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.explore_outlined),
-            selectedIcon: Icon(Icons.explore),
-            label: 'Invest',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.wallet_outlined),
-            selectedIcon: Icon(Icons.wallet),
-            label: 'Portfolio',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.person_outline),
-            selectedIcon: Icon(Icons.person),
-            label: 'Profile',
-          ),
+          NavigationDestination(icon: Icon(Icons.home_outlined), selectedIcon: Icon(Icons.home), label: 'Home'),
+          NavigationDestination(icon: Icon(Icons.explore_outlined), selectedIcon: Icon(Icons.explore), label: 'Invest'),
+          NavigationDestination(icon: Icon(Icons.wallet_outlined), selectedIcon: Icon(Icons.wallet), label: 'Portfolio'),
+          NavigationDestination(icon: Icon(Icons.person_outline), selectedIcon: Icon(Icons.person), label: 'Profile'),
         ],
       ),
     );
   }
 }
 
-// ================= DASHBOARD =================
-
 class DashboardPage extends StatelessWidget {
   final String token;
-
-  const DashboardPage({
-    super.key,
-    required this.token,
-  });
+  const DashboardPage({super.key, required this.token});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Dashboard'),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: const Text('Dashboard')),
       body: FutureBuilder<List<dynamic>>(
         future: ApiService.getMyInvestments(token),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           }
-
-          if (snapshot.hasError) {
-            return Center(child: Text('${snapshot.error}'));
-          }
-
-          final data = snapshot.data ?? [];
-          double total = 0;
-
-          for (final item in data) {
-            total += double.tryParse(item['amount'].toString()) ?? 0;
-          }
-
+          if (snapshot.hasError) return _error(snapshot.error.toString());
+          final list = snapshot.data ?? [];
+          final total = list.fold<double>(
+            0,
+            (sum, item) => sum + (double.tryParse('${item['amount']}') ?? 0),
+          );
           return ListView(
             padding: const EdgeInsets.all(20),
             children: [
-              const Text(
-                'Hello, Investor 👋',
-                style: TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+              const Text('Hello, Investor 👋',
+                  style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
               const SizedBox(height: 8),
-              const Text(
-                'Welcome to your investment dashboard.',
-                style: TextStyle(
-                  color: Colors.grey,
-                  fontSize: 15,
-                ),
-              ),
-              const SizedBox(height: 25),
-              _summaryCard(
-                icon: Icons.account_balance_wallet,
-                title: 'Total Investment',
-                value: '₹${total.toStringAsFixed(2)}',
-              ),
-              const SizedBox(height: 18),
-              _summaryCard(
-                icon: Icons.trending_up,
-                title: 'Investment Count',
-                value: '${data.length}',
-              ),
+              const Text('Your investment journey starts here.',
+                  style: TextStyle(color: Colors.grey)),
+              const SizedBox(height: 24),
+              _metricCard(context, 'Total Investment', '₹${total.toStringAsFixed(2)}', Icons.account_balance_wallet),
+              const SizedBox(height: 14),
+              _metricCard(context, 'Investment Count', '${list.length}', Icons.trending_up),
               const SizedBox(height: 28),
-              const Text(
-                'Quick Actions',
-                style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 15),
-              SizedBox(
-                height: 52,
-                width: double.infinity,
-                child: FilledButton.icon(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => MyInvestmentsPage(token: token),
-                      ),
-                    );
-                  },
-                  icon: const Icon(Icons.wallet),
-                  label: const Text('My Investments'),
-                ),
-              ),
+              const Text('Quick Actions',
+                  style: TextStyle(fontSize: 21, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 14),
+              _action(context, 'Explore Opportunities', Icons.explore,
+                  () => Navigator.push(context, MaterialPageRoute(
+                    builder: (_) => OpportunitiesPage(token: token)))),
               const SizedBox(height: 12),
-              SizedBox(
-                height: 52,
-                width: double.infinity,
-                child: OutlinedButton.icon(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => OpportunitiesPage(token: token),
-                      ),
-                    );
-                  },
-                  icon: const Icon(Icons.explore),
-                  label: const Text('Explore Opportunities'),
-                ),
-              ),
+              _action(context, 'My Portfolio', Icons.wallet,
+                  () => Navigator.push(context, MaterialPageRoute(
+                    builder: (_) => MyInvestmentsPage(token: token)))),
             ],
           );
         },
@@ -370,264 +264,103 @@ class DashboardPage extends StatelessWidget {
     );
   }
 
-  Widget _summaryCard({
-    required IconData icon,
-    required String title,
-    required String value,
-  }) {
+  Widget _metricCard(BuildContext context, String title, String value, IconData icon) {
     return Card(
-      elevation: 3,
       child: Padding(
         padding: const EdgeInsets.all(22),
         child: Row(
           children: [
-            Icon(icon, size: 35),
-            const SizedBox(width: 18),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(color: Colors.grey),
-                ),
-                const SizedBox(height: 5),
-                Text(
-                  value,
-                  style: const TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
+            CircleAvatar(
+              radius: 28,
+              backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+              child: Icon(icon, color: Theme.of(context).colorScheme.primary),
             ),
+            const SizedBox(width: 16),
+            Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text(title, style: const TextStyle(color: Colors.grey)),
+              const SizedBox(height: 5),
+              Text(value, style: const TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
+            ]),
           ],
         ),
       ),
     );
   }
-}
 
-// ================= OPPORTUNITIES =================
+  Widget _action(BuildContext context, String title, IconData icon, VoidCallback onTap) {
+    return SizedBox(
+      height: 56,
+      child: FilledButton.icon(onPressed: onTap, icon: Icon(icon), label: Text(title)),
+    );
+  }
+}
 
 class OpportunitiesPage extends StatefulWidget {
   final String token;
-
-  const OpportunitiesPage({
-    super.key,
-    required this.token,
-  });
-
+  const OpportunitiesPage({super.key, required this.token});
   @override
   State<OpportunitiesPage> createState() => _OpportunitiesPageState();
 }
 
 class _OpportunitiesPageState extends State<OpportunitiesPage> {
   late Future<List<dynamic>> future;
-  final searchController = TextEditingController();
-  String searchText = '';
+  final search = TextEditingController();
 
   @override
   void initState() {
     super.initState();
     future = ApiService.getOpportunities();
-
-    searchController.addListener(() {
-      setState(() {
-        searchText = searchController.text.toLowerCase();
-      });
-    });
+    search.addListener(() => setState(() {}));
   }
 
   @override
   void dispose() {
-    searchController.dispose();
+    search.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          'Explore Investments',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: const Text('Explore Investments')),
       body: FutureBuilder<List<dynamic>>(
         future: future,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           }
-
-          if (snapshot.hasError) {
-            return Center(child: Text('${snapshot.error}'));
-          }
-
-          final allItems = snapshot.data ?? [];
-
-          final items = allItems.where((item) {
-            final title = item['title']?.toString().toLowerCase() ?? '';
-            final description =
-                item['description']?.toString().toLowerCase() ?? '';
-
-            return title.contains(searchText) ||
-                description.contains(searchText);
-          }).toList();
+          if (snapshot.hasError) return _error(snapshot.error.toString());
+          final query = search.text.toLowerCase();
+          final items = (snapshot.data ?? []).where((item) =>
+              '${item['title']}'.toLowerCase().contains(query) ||
+              '${item['description']}'.toLowerCase().contains(query)).toList();
 
           return ListView(
             padding: const EdgeInsets.all(20),
             children: [
-              const Text(
-                'Grow Your Investments',
-                style: TextStyle(
-                  fontSize: 27,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+              const Text('Find Your Next Opportunity',
+                  style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold)),
               const SizedBox(height: 8),
-              const Text(
-                'Explore opportunities and invest in your future.',
-                style: TextStyle(
-                  color: Colors.grey,
-                  fontSize: 15,
+              const Text('Discover projects and invest fractionally.',
+                  style: TextStyle(color: Colors.grey)),
+              const SizedBox(height: 20),
+              TextField(
+                controller: search,
+                decoration: InputDecoration(
+                  hintText: 'Search projects...',
+                  prefixIcon: const Icon(Icons.search),
+                  suffixIcon: search.text.isEmpty
+                      ? null
+                      : IconButton(onPressed: search.clear, icon: const Icon(Icons.clear)),
                 ),
               ),
               const SizedBox(height: 22),
-              TextField(
-                controller: searchController,
-                decoration: InputDecoration(
-                  hintText: 'Search investments...',
-                  prefixIcon: const Icon(Icons.search),
-                  suffixIcon: searchText.isNotEmpty
-                      ? IconButton(
-                          onPressed: searchController.clear,
-                          icon: const Icon(Icons.clear),
-                        )
-                      : null,
-                  filled: true,
-                  fillColor: Colors.white,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16),
-                    borderSide: BorderSide.none,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 25),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    'Available Opportunities',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  Text(
-                    '${items.length} Projects',
-                    style: const TextStyle(color: Colors.grey),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 15),
+              ...items.map((item) => _opportunityCard(context, item)),
               if (items.isEmpty)
                 const Padding(
                   padding: EdgeInsets.all(30),
-                  child: Center(
-                    child: Text('No investments found.'),
-                  ),
+                  child: Center(child: Text('No investments found.')),
                 ),
-              ...items.map((item) {
-                final title = item['title']?.toString() ?? 'Investment';
-                final description =
-                    item['description']?.toString() ?? '';
-                final price =
-                    item['price_per_unit']?.toString() ?? '0';
-                final units =
-                    item['total_units']?.toString() ?? '0';
-
-                return Card(
-                  elevation: 3,
-                  margin: const EdgeInsets.only(bottom: 18),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(20),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(14),
-                          decoration: BoxDecoration(
-                            color: Colors.indigo.shade50,
-                            borderRadius: BorderRadius.circular(15),
-                          ),
-                          child: Icon(
-                            Icons.business_center,
-                            size: 32,
-                            color: Colors.indigo.shade700,
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          title,
-                          style: const TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 10),
-                        Text(
-                          description,
-                          maxLines: 3,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            color: Colors.grey,
-                            height: 1.5,
-                          ),
-                        ),
-                        const SizedBox(height: 20),
-                        const Divider(),
-                        const SizedBox(height: 12),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            _labelValue('Price / Unit', '₹$price'),
-                            _labelValue('Available Units', units),
-                          ],
-                        ),
-                        const SizedBox(height: 20),
-                        SizedBox(
-                          width: double.infinity,
-                          height: 50,
-                          child: FilledButton.icon(
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => InvestmentDetailsPage(
-                                    token: widget.token,
-                                    opportunityId: item['id'],
-                                    title: title,
-                                    description: description,
-                                    price: price,
-                                    units: units,
-                                  ),
-                                ),
-                              );
-                            },
-                            icon: const Icon(Icons.arrow_forward),
-                            label: const Text('View & Invest'),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              }),
             ],
           );
         },
@@ -635,816 +368,396 @@ class _OpportunitiesPageState extends State<OpportunitiesPage> {
     );
   }
 
-  Widget _labelValue(String label, String value) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: const TextStyle(color: Colors.grey),
-        ),
-        const SizedBox(height: 5),
-        Text(
-          value,
-          style: const TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
+  Widget _opportunityCard(BuildContext context, dynamic item) {
+    final title = '${item['title'] ?? 'Investment'}';
+    final description = '${item['description'] ?? ''}';
+    final price = '${item['price_per_unit'] ?? '0'}';
+    final units = '${item['total_units'] ?? '0'}';
+    return Card(
+      margin: const EdgeInsets.only(bottom: 16),
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Container(
+            padding: const EdgeInsets.all(13),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.primaryContainer,
+              borderRadius: BorderRadius.circular(15),
+            ),
+            child: Icon(Icons.business_center,
+                color: Theme.of(context).colorScheme.primary, size: 30),
           ),
-        ),
-      ],
+          const SizedBox(height: 15),
+          Text(title, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 8),
+          Text(description, maxLines: 3, overflow: TextOverflow.ellipsis,
+              style: const TextStyle(color: Colors.grey, height: 1.5)),
+          const SizedBox(height: 16),
+          const Divider(),
+          const SizedBox(height: 12),
+          Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+            _smallValue('Price / Unit', '₹$price'),
+            _smallValue('Units', units),
+          ]),
+          const SizedBox(height: 18),
+          SizedBox(
+            width: double.infinity,
+            height: 50,
+            child: FilledButton(
+              onPressed: () => Navigator.push(context, MaterialPageRoute(
+                builder: (_) => InvestmentDetailsPage(
+                  token: widget.token,
+                  opportunityId: item['id'],
+                  title: title,
+                  description: description,
+                  price: price,
+                  units: units,
+                ))),
+              child: const Text('View & Invest'),
+            ),
+          ),
+        ]),
+      ),
     );
   }
+
+  Widget _smallValue(String label, String value) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text(label, style: const TextStyle(color: Colors.grey, fontSize: 12)),
+      const SizedBox(height: 4),
+      Text(value, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 17)),
+    ],
+  );
 }
 
-// ================= INVESTMENT DETAILS =================
-
 class InvestmentDetailsPage extends StatefulWidget {
-  final String token;
+  final String token, title, description, price, units;
   final dynamic opportunityId;
-  final String title;
-  final String description;
-  final String price;
-  final String units;
-
   const InvestmentDetailsPage({
-    super.key,
-    required this.token,
-    required this.opportunityId,
-    required this.title,
-    required this.description,
-    required this.price,
-    required this.units,
+    super.key, required this.token, required this.opportunityId,
+    required this.title, required this.description, required this.price, required this.units,
   });
-
   @override
-  State<InvestmentDetailsPage> createState() =>
-      _InvestmentDetailsPageState();
+  State<InvestmentDetailsPage> createState() => _InvestmentDetailsPageState();
 }
 
 class _InvestmentDetailsPageState extends State<InvestmentDetailsPage> {
   int selectedUnits = 1;
   bool loading = false;
-  final double minimumInvestment = 500;
-
   double get unitPrice => double.tryParse(widget.price) ?? 0;
   double get total => selectedUnits * unitPrice;
+  int get available => int.tryParse(widget.units) ?? 0;
 
-  Future<void> confirmInvestment() async {
-    if (total < minimumInvestment) {
+  Future<void> invest() async {
+    if (total < 500) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Minimum investment is ₹500')),
       );
       return;
     }
-
     setState(() => loading = true);
-
     try {
       final result = await ApiService.createInvestment(
         token: widget.token,
         opportunityId: int.parse(widget.opportunityId.toString()),
         units: selectedUnits,
       );
-
       if (!mounted) return;
-
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (_) => InvestmentSuccessPage(
-            title: widget.title,
-            units: selectedUnits,
-            amount: double.tryParse(result['amount'].toString()) ?? total,
-          ),
-        ),
-      );
+      Navigator.pushReplacement(context, MaterialPageRoute(
+        builder: (_) => InvestmentSuccessPage(
+          title: widget.title,
+          units: selectedUnits,
+          amount: double.tryParse('${result['amount']}') ?? total,
+        )));
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString())),
-        );
-      }
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.toString())));
     } finally {
       if (mounted) setState(() => loading = false);
     }
   }
 
   @override
-  Widget build(BuildContext context) {
-    final availableUnits = int.tryParse(widget.units) ?? 0;
-
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Investment Details'),
-        centerTitle: true,
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(20),
-        children: [
-          Container(
-            height: 150,
-            decoration: BoxDecoration(
-              color: Colors.indigo.shade700,
-              borderRadius: BorderRadius.circular(22),
-            ),
-            child: const Center(
-              child: Icon(
-                Icons.business_center,
-                size: 70,
-                color: Colors.white,
-              ),
-            ),
-          ),
-          const SizedBox(height: 22),
-          Text(
-            widget.title,
-            style: const TextStyle(
-              fontSize: 27,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 10),
-          Text(
-            widget.description,
-            style: const TextStyle(
-              color: Colors.grey,
-              height: 1.5,
-            ),
-          ),
-          const SizedBox(height: 25),
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                children: [
-                  _row('Price per Unit', '₹${widget.price}'),
-                  const Divider(height: 25),
-                  _row('Available Units', widget.units),
-                  const Divider(height: 25),
-                  _row('Minimum Investment', '₹500'),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 25),
-          const Text(
-            'Select Investment Units',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 15),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              IconButton.filledTonal(
-                onPressed: selectedUnits > 1
-                    ? () => setState(() => selectedUnits--)
-                    : null,
-                icon: const Icon(Icons.remove),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 30),
-                child: Text(
-                  '$selectedUnits',
-                  style: const TextStyle(
-                    fontSize: 30,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-              IconButton.filledTonal(
-                onPressed: selectedUnits < availableUnits
-                    ? () => setState(() => selectedUnits++)
-                    : null,
-                icon: const Icon(Icons.add),
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-          Card(
-            color: Colors.indigo.shade50,
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                children: [
-                  const Text(
-                    'Total Investment Amount',
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.grey,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  Text(
-                    '₹${total.toStringAsFixed(2)}',
-                    style: TextStyle(
-                      fontSize: 30,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.indigo.shade700,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    total >= minimumInvestment
-                        ? 'Minimum amount reached ✓'
-                        : 'Minimum investment: ₹500',
-                    style: TextStyle(
-                      color: total >= minimumInvestment
-                          ? Colors.green
-                          : Colors.red,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 25),
-          SizedBox(
-            height: 54,
-            child: FilledButton.icon(
-              onPressed: loading ||
-                      total < minimumInvestment
-                  ? null
-                  : confirmInvestment,
-              icon: const Icon(Icons.lock_outline),
-              label: loading
-                  ? const SizedBox(
-                      height: 22,
-                      width: 22,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                      ),
-                    )
-                  : const Text('Confirm Investment'),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _row(String title, String value) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  Widget build(BuildContext context) => Scaffold(
+    appBar: AppBar(title: const Text('Investment Details')),
+    body: ListView(
+      padding: const EdgeInsets.all(20),
       children: [
-        Text(
-          title,
-          style: const TextStyle(color: Colors.grey),
-        ),
-        Flexible(
-          child: Text(
-            value,
-            style: const TextStyle(fontWeight: FontWeight.bold),
+        Container(
+          height: 150,
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(colors: [Color(0xff3454d1), Color(0xff6578e8)]),
+            borderRadius: BorderRadius.circular(24),
           ),
+          child: const Icon(Icons.business_center, color: Colors.white, size: 70),
         ),
+        const SizedBox(height: 22),
+        Text(widget.title, style: const TextStyle(fontSize: 27, fontWeight: FontWeight.bold)),
+        const SizedBox(height: 10),
+        Text(widget.description, style: const TextStyle(color: Colors.grey, height: 1.5)),
+        const SizedBox(height: 22),
+        Card(child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(children: [
+            _infoRow('Price per Unit', '₹${widget.price}'),
+            const Divider(height: 25),
+            _infoRow('Available Units', widget.units),
+            const Divider(height: 25),
+            _infoRow('Minimum Investment', '₹500'),
+          ]),
+        )),
+        const SizedBox(height: 25),
+        const Text('Select Units', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+        const SizedBox(height: 15),
+        Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+          IconButton.filledTonal(
+            onPressed: selectedUnits > 1 ? () => setState(() => selectedUnits--) : null,
+            icon: const Icon(Icons.remove),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 35),
+            child: Text('$selectedUnits', style: const TextStyle(fontSize: 30, fontWeight: FontWeight.bold)),
+          ),
+          IconButton.filledTonal(
+            onPressed: selectedUnits < available ? () => setState(() => selectedUnits++) : null,
+            icon: const Icon(Icons.add),
+          ),
+        ]),
+        const SizedBox(height: 20),
+        Card(color: Theme.of(context).colorScheme.primaryContainer, child: Padding(
+          padding: const EdgeInsets.all(22),
+          child: Column(children: [
+            const Text('Total Investment Amount'),
+            const SizedBox(height: 8),
+            Text('₹${total.toStringAsFixed(2)}',
+              style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold,
+                color: Theme.of(context).colorScheme.primary)),
+            const SizedBox(height: 8),
+            Text(total >= 500 ? 'Minimum amount reached ✓' : 'Minimum investment: ₹500'),
+          ]),
+        )),
+        const SizedBox(height: 25),
+        SizedBox(height: 54, child: FilledButton.icon(
+          onPressed: loading || total < 500 ? null : invest,
+          icon: const Icon(Icons.lock_outline),
+          label: loading ? const CircularProgressIndicator() : const Text('Confirm Investment'),
+        )),
       ],
-    );
-  }
-}
+    ),
+  );
 
-// ================= SUCCESS PAGE =================
+  Widget _infoRow(String a, String b) => Row(
+    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    children: [
+      Text(a, style: const TextStyle(color: Colors.grey)),
+      Flexible(child: Text(b, style: const TextStyle(fontWeight: FontWeight.bold))),
+    ],
+  );
+}
 
 class InvestmentSuccessPage extends StatelessWidget {
   final String title;
   final int units;
   final double amount;
-
-  const InvestmentSuccessPage({
-    super.key,
-    required this.title,
-    required this.units,
-    required this.amount,
-  });
+  const InvestmentSuccessPage({super.key, required this.title, required this.units, required this.amount});
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF5F7FB),
-      appBar: AppBar(
-        title: const Text('Investment Confirmation'),
-        centerTitle: true,
-        automaticallyImplyLeading: false,
-      ),
-      body: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(24),
-                decoration: const BoxDecoration(
-                  color: Colors.green,
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.check_rounded,
-                  color: Colors.white,
-                  size: 70,
-                ),
-              ),
-              const SizedBox(height: 28),
-              const Text(
-                'Investment Successful!',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 27,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 12),
-              const Text(
-                'Your investment has been completed successfully.',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: Colors.grey,
-                  fontSize: 16,
-                ),
-              ),
-              const SizedBox(height: 28),
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(22),
-                  child: Column(
-                    children: [
-                      const Text(
-                        'Investment Details',
-                        style: TextStyle(
-                          fontSize: 19,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                      _successRow('Project', title),
-                      const Divider(height: 25),
-                      _successRow('Units', '$units'),
-                      const Divider(height: 25),
-                      _successRow(
-                        'Total Amount',
-                        '₹${amount.toStringAsFixed(2)}',
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 35),
-              SizedBox(
-                width: double.infinity,
-                height: 55,
-                child: FilledButton.icon(
-                  onPressed: () {
-                    Navigator.popUntil(
-                      context,
-                      (route) => route.isFirst,
-                    );
-                  },
-                  icon: const Icon(Icons.home_outlined),
-                  label: const Text('Back to Home'),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
+  Widget build(BuildContext context) => Scaffold(
+    appBar: AppBar(title: const Text('Confirmation'), automaticallyImplyLeading: false),
+    body: Center(child: SingleChildScrollView(
+      padding: const EdgeInsets.all(24),
+      child: Column(children: [
+        const CircleAvatar(radius: 45, backgroundColor: Colors.green,
+          child: Icon(Icons.check, color: Colors.white, size: 60)),
+        const SizedBox(height: 25),
+        const Text('Investment Successful!', textAlign: TextAlign.center,
+          style: TextStyle(fontSize: 27, fontWeight: FontWeight.bold)),
+        const SizedBox(height: 10),
+        const Text('Your investment has been completed successfully.',
+          textAlign: TextAlign.center, style: TextStyle(color: Colors.grey)),
+        const SizedBox(height: 25),
+        Card(child: Padding(
+          padding: const EdgeInsets.all(22),
+          child: Column(children: [
+            _row('Project', title),
+            const Divider(height: 25),
+            _row('Units', '$units'),
+            const Divider(height: 25),
+            _row('Total Amount', '₹${amount.toStringAsFixed(2)}'),
+          ]),
+        )),
+        const SizedBox(height: 30),
+        SizedBox(width: double.infinity, height: 54,
+          child: FilledButton.icon(
+            onPressed: () => Navigator.popUntil(context, (route) => route.isFirst),
+            icon: const Icon(Icons.home),
+            label: const Text('Back to Home'),
+          )),
+      ]),
+    )),
+  );
 
-  Widget _successRow(String label, String value) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          label,
-          style: const TextStyle(color: Colors.grey),
-        ),
-        Flexible(
-          child: Text(
-            value,
-            textAlign: TextAlign.end,
-            style: const TextStyle(fontWeight: FontWeight.bold),
-          ),
-        ),
-      ],
-    );
-  }
+  Widget _row(String a, String b) => Row(
+    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    children: [
+      Text(a, style: const TextStyle(color: Colors.grey)),
+      Flexible(child: Text(b, textAlign: TextAlign.end,
+        style: const TextStyle(fontWeight: FontWeight.bold))),
+    ],
+  );
 }
-
-// ================= PORTFOLIO =================
 
 class MyInvestmentsPage extends StatefulWidget {
   final String token;
-
-  const MyInvestmentsPage({
-    super.key,
-    required this.token,
-  });
-
+  const MyInvestmentsPage({super.key, required this.token});
   @override
   State<MyInvestmentsPage> createState() => _MyInvestmentsPageState();
 }
 
 class _MyInvestmentsPageState extends State<MyInvestmentsPage> {
-  late Future<List<dynamic>> investmentsFuture;
-
+  late Future<List<dynamic>> future;
   @override
-  void initState() {
-    super.initState();
-    loadInvestments();
-  }
+  void initState() { super.initState(); load(); }
+  void load() { future = ApiService.getMyInvestments(widget.token); }
 
-  void loadInvestments() {
-    investmentsFuture = ApiService.getMyInvestments(widget.token);
-  }
-
-  Future<void> refreshInvestments() async {
-    setState(loadInvestments);
-    await investmentsFuture;
-  }
-
-  String formatDate(dynamic rawDate) {
-    if (rawDate == null || rawDate.toString().isEmpty) {
-      return 'Date unavailable';
-    }
-
+  String date(dynamic value) {
     try {
-      final date = DateTime.parse(rawDate.toString()).toLocal();
-
-      final day = date.day.toString().padLeft(2, '0');
-      final month = date.month.toString().padLeft(2, '0');
-      final year = date.year.toString();
-
-      final hour = date.hour == 0
-          ? 12
-          : date.hour > 12
-              ? date.hour - 12
-              : date.hour;
-
-      final minute = date.minute.toString().padLeft(2, '0');
-      final period = date.hour >= 12 ? 'PM' : 'AM';
-
-      return '$day/$month/$year, $hour:$minute $period';
-    } catch (_) {
-      return rawDate.toString();
-    }
+      final d = DateTime.parse('$value').toLocal();
+      final h = d.hour == 0 ? 12 : (d.hour > 12 ? d.hour - 12 : d.hour);
+      return '${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}/${d.year} $h:${d.minute.toString().padLeft(2, '0')} ${d.hour >= 12 ? 'PM' : 'AM'}';
+    } catch (_) { return '$value'; }
   }
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          'My Portfolio',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        actions: [
-          IconButton(
-            onPressed: () => setState(loadInvestments),
-            icon: const Icon(Icons.refresh),
+  Widget build(BuildContext context) => Scaffold(
+    appBar: AppBar(title: const Text('My Portfolio'), actions: [
+      IconButton(onPressed: () => setState(load), icon: const Icon(Icons.refresh)),
+    ]),
+    body: FutureBuilder<List<dynamic>>(
+      future: future,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) return const Center(child: CircularProgressIndicator());
+        if (snapshot.hasError) return _error(snapshot.error.toString());
+        final list = snapshot.data ?? [];
+        final total = list.fold<double>(0, (s, x) => s + (double.tryParse('${x['amount']}') ?? 0));
+        return RefreshIndicator(
+          onRefresh: () async { setState(load); await future; },
+          child: ListView(
+            padding: const EdgeInsets.all(20),
+            children: [
+              const Text('Investment Overview', style: TextStyle(fontSize: 23, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 18),
+              Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(colors: [Color(0xff3454d1), Color(0xff6578e8)]),
+                  borderRadius: BorderRadius.circular(24),
+                ),
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  const Text('Total Invested', style: TextStyle(color: Colors.white70)),
+                  const SizedBox(height: 8),
+                  Text('₹${total.toStringAsFixed(2)}',
+                    style: const TextStyle(color: Colors.white, fontSize: 30, fontWeight: FontWeight.bold)),
+                ]),
+              ),
+              const SizedBox(height: 15),
+              Card(child: ListTile(
+                leading: const Icon(Icons.pie_chart),
+                title: const Text('Investment Count'),
+                subtitle: Text('${list.length} investments'),
+              )),
+              const SizedBox(height: 25),
+              const Text('Your Investments', style: TextStyle(fontSize: 21, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 15),
+              if (list.isEmpty) const Padding(
+                padding: EdgeInsets.all(30), child: Center(child: Text('No investments available yet.'))),
+              ...list.map((x) => Card(
+                margin: const EdgeInsets.only(bottom: 14),
+                child: Padding(
+                  padding: const EdgeInsets.all(18),
+                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    Text('${x['opportunity_title'] ?? 'Investment'}',
+                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 8),
+                    Text('Date: ${date(x['created_at'])}', style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                    const SizedBox(height: 15),
+                    _line('Units', '${x['units']}'),
+                    const SizedBox(height: 8),
+                    _line('Amount', '₹${x['amount']}'),
+                    const SizedBox(height: 14),
+                    Container(width: double.infinity, padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(color: Colors.green.withOpacity(.1), borderRadius: BorderRadius.circular(10)),
+                      child: const Text('Investment Successful', textAlign: TextAlign.center,
+                        style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold))),
+                  ]),
+                ),
+              )),
+            ],
           ),
-        ],
-      ),
-      body: FutureBuilder<List<dynamic>>(
-        future: investmentsFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
+        );
+      },
+    ),
+  );
 
-          if (snapshot.hasError) {
-            return Center(child: Text('${snapshot.error}'));
-          }
-
-          final investments = snapshot.data ?? [];
-          double totalAmount = 0;
-
-          for (final item in investments) {
-            totalAmount +=
-                double.tryParse(item['amount'].toString()) ?? 0;
-          }
-
-          return RefreshIndicator(
-            onRefresh: refreshInvestments,
-            child: ListView(
-              padding: const EdgeInsets.all(20),
-              children: [
-                const Text(
-                  'Investment Overview',
-                  style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 20),
-                Container(
-                  padding: const EdgeInsets.all(22),
-                  decoration: BoxDecoration(
-                    color: Colors.indigo,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Total Invested',
-                        style: TextStyle(color: Colors.white70),
-                      ),
-                      const SizedBox(height: 10),
-                      Text(
-                        '₹${totalAmount.toStringAsFixed(2)}',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 30,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 15),
-                Card(
-                  child: ListTile(
-                    leading: const Icon(
-                      Icons.pie_chart,
-                      color: Colors.indigo,
-                      size: 30,
-                    ),
-                    title: const Text('Investment Count'),
-                    subtitle: Text('${investments.length} investments'),
-                  ),
-                ),
-                const SizedBox(height: 25),
-                const Text(
-                  'Your Investments',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 15),
-                if (investments.isEmpty)
-                  const Padding(
-                    padding: EdgeInsets.all(30),
-                    child: Center(
-                      child: Text('No investments available yet.'),
-                    ),
-                  ),
-                ...investments.map(
-                  (investment) => Card(
-                    margin: const EdgeInsets.only(bottom: 15),
-                    child: Padding(
-                      padding: const EdgeInsets.all(18),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            investment['opportunity_title'] ??
-                                'Investment',
-                            style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(height: 6),
-                          Row(
-                            children: [
-                              const Icon(
-                                Icons.calendar_month_outlined,
-                                size: 16,
-                                color: Colors.grey,
-                              ),
-                              const SizedBox(width: 6),
-                              Expanded(
-                                child: Text(
-                                  'Date: ${formatDate(investment['created_at'])}',
-                                  style: const TextStyle(
-                                    color: Colors.grey,
-                                    fontSize: 13,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 15),
-                          _portfolioRow(
-                            'Units',
-                            '${investment['units']}',
-                          ),
-                          const SizedBox(height: 10),
-                          _portfolioRow(
-                            'Amount',
-                            '₹${investment['amount']}',
-                          ),
-                          const SizedBox(height: 15),
-                          Container(
-                            width: double.infinity,
-                            padding: const EdgeInsets.all(10),
-                            decoration: BoxDecoration(
-                              color: Colors.green.withOpacity(.1),
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: const Text(
-                              'Investment Successful',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                color: Colors.green,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          );
-        },
-      ),
-    );
-  }
-
-  Widget _portfolioRow(String label, String value) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          label,
-          style: const TextStyle(color: Colors.grey),
-        ),
-        Text(
-          value,
-          style: const TextStyle(fontWeight: FontWeight.bold),
-        ),
-      ],
-    );
-  }
+  Widget _line(String a, String b) => Row(
+    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    children: [Text(a, style: const TextStyle(color: Colors.grey)), Text(b, style: const TextStyle(fontWeight: FontWeight.bold))],
+  );
 }
-
-// ================= PROFILE =================
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
-
-  void openPage(
-    BuildContext context,
-    String title,
-    String message,
-  ) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => SimpleProfilePage(
-          title: title,
-          message: message,
-        ),
-      ),
-    );
-  }
-
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('My Profile'),
-        centerTitle: true,
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(20),
-        children: [
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(25),
-              child: Column(
-                children: [
-                  const CircleAvatar(
-                    radius: 48,
-                    child: Icon(Icons.person, size: 55),
-                  ),
-                  const SizedBox(height: 15),
-                  const Text(
-                    'Investor',
-                    style: TextStyle(
-                      fontSize: 25,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 5),
-                  const Text(
-                    'Fractional Investment User',
-                    style: TextStyle(color: Colors.grey),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 25),
-          const Text(
-            'Account Settings',
-            style: TextStyle(
-              fontSize: 21,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 12),
-          Card(
-            child: Column(
-              children: [
-                ListTile(
-                  leading: const Icon(Icons.person_outline),
-                  title: const Text('Personal Information'),
-                  subtitle: const Text('View your profile details'),
-                  trailing: const Icon(Icons.arrow_forward_ios),
-                  onTap: () {
-                    openPage(
-                      context,
-                      'Personal Information',
-                      'Your personal information will appear here.',
-                    );
-                  },
-                ),
-                const Divider(height: 1),
-                ListTile(
-                  leading: const Icon(Icons.security_outlined),
-                  title: const Text('Security'),
-                  subtitle: const Text('Manage account security'),
-                  trailing: const Icon(Icons.arrow_forward_ios),
-                  onTap: () {
-                    openPage(
-                      context,
-                      'Security',
-                      'Your security settings will appear here.',
-                    );
-                  },
-                ),
-                const Divider(height: 1),
-                ListTile(
-                  leading: const Icon(Icons.notifications_outlined),
-                  title: const Text('Notifications'),
-                  subtitle: const Text('Manage your notifications'),
-                  trailing: const Icon(Icons.arrow_forward_ios),
-                  onTap: () {
-                    openPage(
-                      context,
-                      'Notifications',
-                      'Your notification settings will appear here.',
-                    );
-                  },
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 30),
-          SizedBox(
-            height: 52,
-            child: OutlinedButton.icon(
-              onPressed: () {
-                Navigator.pushAndRemoveUntil(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => const LoginPage(),
-                  ),
-                  (_) => false,
-                );
-              },
-              icon: const Icon(Icons.logout),
-              label: const Text('Logout'),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
+  Widget build(BuildContext context) => Scaffold(
+    appBar: AppBar(title: const Text('My portfolio')),
+    body: ListView(
+      padding: const EdgeInsets.all(20),
+      children: [
+        Card(child: Padding(padding: const EdgeInsets.all(25), child: Column(children: [
+          const CircleAvatar(radius: 45, child: Icon(Icons.person, size: 55)),
+          const SizedBox(height: 14),
+          const Text('Investor', style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold)),
+          const Text('Fractional Investment User', style: TextStyle(color: Colors.grey)),
+        ]))),
+        const SizedBox(height: 25),
+        const Text('Account Settings', style: TextStyle(fontSize: 21, fontWeight: FontWeight.bold)),
+        const SizedBox(height: 12),
+        Card(child: Column(children: [
+          _setting(context, Icons.person_outline, 'Personal Information', 'View your profile details'),
+          const Divider(height: 1),
+          _setting(context, Icons.security_outlined, 'Security', 'Manage account security'),
+          const Divider(height: 1),
+          _setting(context, Icons.notifications_outlined, 'Notifications', 'Manage notifications'),
+        ])),
+        const SizedBox(height: 30),
+        SizedBox(height: 52, child: OutlinedButton.icon(
+          onPressed: () => Navigator.pushAndRemoveUntil(context,
+            MaterialPageRoute(builder: (_) => const LoginPage()), (_) => false),
+          icon: const Icon(Icons.logout), label: const Text('Logout'),
+        )),
+      ],
+    ),
+  );
 
-// ================= SIMPLE PROFILE =================
+  Widget _setting(BuildContext context, IconData icon, String title, String subtitle) => ListTile(
+    leading: Icon(icon), title: Text(title), subtitle: Text(subtitle),
+    trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+    onTap: () => Navigator.push(context, MaterialPageRoute(
+      builder: (_) => SimpleProfilePage(title: title, message: '$title settings will appear here.'))),
+  );
+}
 
 class SimpleProfilePage extends StatelessWidget {
-  final String title;
-  final String message;
-
-  const SimpleProfilePage({
-    super.key,
-    required this.title,
-    required this.message,
-  });
-
+  final String title, message;
+  const SimpleProfilePage({super.key, required this.title, required this.message});
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text(title)),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(25),
-          child: Text(
-            message,
-            textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 18),
-          ),
-        ),
-      ),
-    );
-  }
+  Widget build(BuildContext context) => Scaffold(
+    appBar: AppBar(title: Text(title)),
+    body: Center(child: Padding(padding: const EdgeInsets.all(25), child: Text(message, textAlign: TextAlign.center))),
+  );
 }
+
+Widget _error(String message) => Center(
+  child: Padding(padding: const EdgeInsets.all(24), child: Text(message, textAlign: TextAlign.center)),
+);
