@@ -1,0 +1,16 @@
+# Fractional Investment Flutter App
+
+A Flutter mobile application connected to a Django REST API.
+
+## Technologies
+- Flutter
+- Dart
+- Django REST Framework
+- REST API
+
+## Features
+- User Login
+- Investment Opportunities
+- Create Investments
+- Investment History
+- Portfolio Dashboard
